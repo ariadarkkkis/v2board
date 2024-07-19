@@ -132,7 +132,7 @@ class ResellerController extends Controller
                 abort(500, '生成失败');
             }
             
-            if ($plan){
+            if ($request->input('plan_id')){
                 $this->setManualOrder($user['email'], $plan->id);
             }
 
