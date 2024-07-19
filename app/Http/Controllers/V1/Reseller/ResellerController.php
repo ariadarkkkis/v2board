@@ -8,12 +8,8 @@ use App\Models\User;
 use App\Models\Plan;
 use App\Http\Requests\Admin\UserFetch;
 use App\Http\Requests\Admin\UserGenerate;
-use App\Http\Requests\Admin\UserUpdate;
 use App\Models\Order;
-use App\Services\AuthService;
 use App\Services\PlanService;
-use App\Services\OrderService;
-use App\Services\UserService;
 use App\Utils\Helper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
@@ -120,16 +116,18 @@ class ResellerController extends Controller
                 'email' => $request->input('email_prefix') . '@' . $request->input('email_suffix'),
                 'plan_id' => isset($plan->id) ? $plan->id : NULL,
                 'group_id' => isset($plan->group_id) ? $plan->group_id : NULL,
-                'transfer_enable' => isset($plan->transfer_enable) ? $plan->transfer_enable * 1073741824 : 0,
-                'device_limit' => isset($plan->device_limit) ? $plan->device_limit : NULL,
-                'expired_at' => $request->input('expired_at') ?? time() + ($plan->days * 24 * 60 * 60),
+                'transfer_enable' => isset($plan->transfer_enable) ? $plan->transfer_enable * 1073741824 : 1 * 1073741824,
+                'device_limit' => isset($plan->device_limit) ? $plan->device_limit : 1,
+                'expired_at' => isset($plan->days) ? time() + ($plan->days * 24 * 60 * 60) : time() + (1 * 24 * 60 * 60),
                 'uuid' => Helper::guid(true),
-                'token' => Helper::guid()
+                'token' => Helper::guid(),
+                'created_at' => time(),
+                'updated_at' => time()
             ];
             if (User::where('email', $user['email'])->first()) {
                 abort(500, '邮箱已存在于系统中');
             }
-            $user['password'] = password_hash($request->input('password') ?? $user['email'], PASSWORD_DEFAULT);
+            $user['password'] = password_hash(Helper::randomChar(16, true), PASSWORD_DEFAULT);
             if (!User::create($user)) {
                 abort(500, '生成失败');
             }
@@ -162,15 +160,15 @@ class ResellerController extends Controller
                 'email' => Helper::randomChar(6) . '@' . $request->input('email_suffix'),
                 'plan_id' => isset($plan->id) ? $plan->id : NULL,
                 'group_id' => isset($plan->group_id) ? $plan->group_id : NULL,
-                'transfer_enable' => isset($plan->transfer_enable) ? $plan->transfer_enable * 1073741824 : 0,
-                'device_limit' => isset($plan->device_limit) ? $plan->device_limit : NULL,
-                'expired_at' => $request->input('expired_at') ?? time() + ($plan->days * 24 * 60 * 60),
+                'transfer_enable' => isset($plan->transfer_enable) ? $plan->transfer_enable * 1073741824 : 1 * 1073741824,
+                'device_limit' => isset($plan->device_limit) ? $plan->device_limit : 1,
+                'expired_at' => isset($plan->days) ? time() + ($plan->days * 24 * 60 * 60) : time() + (1 * 24 * 60 * 60),
                 'uuid' => Helper::guid(true),
                 'token' => Helper::guid(),
                 'created_at' => time(),
                 'updated_at' => time()
             ];
-            $user['password'] = password_hash($request->input('password') ?? $user['email'], PASSWORD_DEFAULT);
+            $user['password'] = password_hash(Helper::randomChar(16, true), PASSWORD_DEFAULT);
             array_push($users, $user);
         }
         DB::beginTransaction();
@@ -183,7 +181,7 @@ class ResellerController extends Controller
         foreach($users as $user) {
             $expireDate = $user['expired_at'] === NULL ? '长期有效' : date('Y-m-d H:i:s', $user['expired_at']);
             $createDate = date('Y-m-d H:i:s', $user['created_at']);
-            $password = $request->input('password') ?? $user['email'];
+            $password = $user['password'];
             $subscribeUrl = Helper::getSubscribeUrl($user['token']);
             
             if ($plan){
@@ -317,19 +315,20 @@ class ResellerController extends Controller
             abort(500, '该订阅不存在');
         }
 
-        $userService = new UserService();
-        if ($userService->isNotCompleteOrderByUserId($user->id)) {
-            abort(500, '该用户还有待支付的订单，无法分配');
-        }
-
         DB::beginTransaction();
         $order = new Order();
-        $orderService = new OrderService($order);
         $order->user_id = $user->id;
         $order->plan_id = $plan->id;
-        $order->period = $request->input('period') ?? 'onetime_price';
+        $order->period = 'onetime_price';
         $order->trade_no = Helper::guid();
-        $order->total_amount = $request->input('total_amount') ?? 0;
+        $order->total_amount = 0;
+
+        // Update user
+        $user->plan_id = $plan->id;
+        $user->group_id = $plan->group_id;
+        $user->transfer_enable = $plan->transfer_enable * 1073741824;
+        $user->device_limit = $plan->device_limit;
+        $user->expired_at = time() + ($plan->days * 24 * 60 * 60);
 
         if ($order->period === 'reset_price') {
             $order->type = 4;
@@ -340,12 +339,15 @@ class ResellerController extends Controller
         } else {
             $order->type = 1;
         }
-
-        $orderService->setInvite($user);
         
         $order->status = 3;
 
         if (!$order->save()) {
+            DB::rollback();
+            abort(500, '订单创建失败');
+        }
+
+        if (!$user->save()) {
             DB::rollback();
             abort(500, '订单创建失败');
         }
@@ -362,7 +364,6 @@ class ResellerController extends Controller
         $user = User::where('email', $userEmail)->first();
         DB::beginTransaction();
         $order = new Order();
-        $orderService = new OrderService($order);
         $order->user_id = $user->id;
         $order->plan_id = $planId;
         $order->period = 'onetime_price';
@@ -378,8 +379,6 @@ class ResellerController extends Controller
         } else {
             $order->type = 1;
         }
-
-        $orderService->setInvite($user);
         
         $order->status = 3;
 

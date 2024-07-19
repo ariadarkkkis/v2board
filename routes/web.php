@@ -57,7 +57,7 @@ if (!empty(config('v2board.subscribe_path'))) {
 }
 
 Route::get('/reseller', function () {
-    return view('admin', [
+    return view('reseller', [
         'title' => config('v2board.app_name', 'V2Board'),
         'theme_sidebar' => config('v2board.frontend_theme_sidebar', 'light'),
         'theme_header' => config('v2board.frontend_theme_header', 'dark'),

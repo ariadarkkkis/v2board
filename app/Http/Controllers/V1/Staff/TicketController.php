@@ -44,41 +44,6 @@ class TicketController extends Controller
             'total' => $total
         ]);
     }
-
-    public function fetchtwo(Request $request)
-    {
-        if ($request->input('id')) {
-            $ticket = Ticket::where('id', $request->input('id'))
-                ->first();
-            if (!$ticket) {
-                abort(500, '工单不存在');
-            }
-            $ticket['message'] = TicketMessage::where('ticket_id', $ticket->id)->get();
-            for ($i = 0; $i < count($ticket['message']); $i++) {
-                if ($ticket['message'][$i]['user_id'] !== $ticket->user_id) {
-                    $ticket['message'][$i]['is_me'] = true;
-                } else {
-                    $ticket['message'][$i]['is_me'] = false;
-                }
-            }
-            return response([
-                'data' => $ticket
-            ]);
-        }
-        $current = $request->input('current') ? $request->input('current') : 1;
-        $pageSize = $request->input('pageSize') >= 10 ? $request->input('pageSize') : 10;
-        $model = Ticket::orderBy('created_at', 'DESC');
-        if ($request->input('status') !== NULL) {
-            $model->where('status', $request->input('status'));
-        }
-        $total = $model->count();
-        $res = $model->forPage($current, $pageSize)
-            ->get();
-        return response([
-            'data' => $res,
-            'total' => $total
-        ]);
-    }
     
     public function reply(Request $request)
     {
