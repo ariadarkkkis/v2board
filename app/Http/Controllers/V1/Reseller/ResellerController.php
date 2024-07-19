@@ -116,7 +116,7 @@ class ResellerController extends Controller
             $user = [
                 'email' => $request->input('email_prefix') . '@' . $request->input('email_suffix'),
                 'plan_id' => isset($plan->id) ? $plan->id : NULL,
-                'group_id' => isset($plan->group_id) ? $plan->group_id : $user->group_id,
+                'group_id' => isset($plan->group_id) ? $plan->group_id : $resellerUser->group_id,
                 'transfer_enable' => isset($plan->transfer_enable) ? $plan->transfer_enable * 1073741824 : 1 * 1073741824,
                 'device_limit' => isset($plan->device_limit) ? $plan->device_limit : 1,
                 'expired_at' => isset($plan->days) ? time() + ($plan->days * 24 * 60 * 60) : time() + (1 * 24 * 60 * 60),
