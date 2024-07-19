@@ -12,11 +12,13 @@
     "license": "MIT",
     "require": {
         "php": "^7.3.0|^8.0",
+        "cedar2025/http-foundation": "5.4.x-dev",
         "fideloper/proxy": "^4.4",
         "firebase/php-jwt": "^6.3",
         "fruitcake/laravel-cors": "^2.0",
         "google/recaptcha": "^1.2",
         "guzzlehttp/guzzle": "^7.4.3",
+        "joanhey/adapterman": "^0.6.1",
         "laravel/framework": "^8.0",
         "laravel/horizon": "^5.9.6",
         "laravel/tinker": "^2.5",
