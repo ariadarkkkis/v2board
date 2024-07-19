@@ -105,6 +105,7 @@ class ResellerController extends Controller
     
     public function userGenerate(UserGenerate $request)
     {
+        $resellerUser = User::find($request->user['id']);
         if ($request->input('email_prefix')) {
             if ($request->input('plan_id')) {
                 $plan = Plan::find($request->input('plan_id'));
@@ -115,7 +116,7 @@ class ResellerController extends Controller
             $user = [
                 'email' => $request->input('email_prefix') . '@' . $request->input('email_suffix'),
                 'plan_id' => isset($plan->id) ? $plan->id : NULL,
-                'group_id' => isset($plan->group_id) ? $plan->group_id : NULL,
+                'group_id' => isset($plan->group_id) ? $plan->group_id : $user->group_id,
                 'transfer_enable' => isset($plan->transfer_enable) ? $plan->transfer_enable * 1073741824 : 1 * 1073741824,
                 'device_limit' => isset($plan->device_limit) ? $plan->device_limit : 1,
                 'expired_at' => isset($plan->days) ? time() + ($plan->days * 24 * 60 * 60) : time() + (1 * 24 * 60 * 60),
@@ -142,11 +143,11 @@ class ResellerController extends Controller
         }
         
         if ($request->input('generate_count')) {
-            $this->userMultiGenerate($request);
+            $this->userMultiGenerate($request, $resellerUser);
         }
     }
 
-    private function userMultiGenerate(Request $request)
+    private function userMultiGenerate(Request $request, User $resellerUser)
     {
         if ($request->input('plan_id')) {
             $plan = Plan::find($request->input('plan_id'));
@@ -159,7 +160,7 @@ class ResellerController extends Controller
             $user = [
                 'email' => Helper::randomChar(6) . '@' . $request->input('email_suffix'),
                 'plan_id' => isset($plan->id) ? $plan->id : NULL,
-                'group_id' => isset($plan->group_id) ? $plan->group_id : NULL,
+                'group_id' => isset($plan->group_id) ? $plan->group_id : $resellerUser->group_id,
                 'transfer_enable' => isset($plan->transfer_enable) ? $plan->transfer_enable * 1073741824 : 1 * 1073741824,
                 'device_limit' => isset($plan->device_limit) ? $plan->device_limit : 1,
                 'expired_at' => isset($plan->days) ? time() + ($plan->days * 24 * 60 * 60) : time() + (1 * 24 * 60 * 60),
@@ -184,7 +185,7 @@ class ResellerController extends Controller
             $password = $user['password'];
             $subscribeUrl = Helper::getSubscribeUrl($user['token']);
             
-            if ($plan){
+            if ($request->input('plan_id')){
                 $this->setManualOrder($user['email'], $plan->id);
             }
             
