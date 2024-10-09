@@ -10,6 +10,7 @@ use App\Http\Requests\Admin\UserFetch;
 use App\Http\Requests\Admin\UserGenerate;
 use App\Models\Order;
 use App\Services\PlanService;
+use App\Services\UserService;
 use App\Utils\Helper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
