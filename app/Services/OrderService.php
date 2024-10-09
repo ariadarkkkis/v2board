@@ -281,6 +281,8 @@ class OrderService
 
     private function buyByPeriod(Order $order, Plan $plan)
     {
+        $this->buyByResetTraffic();
+        $this->user->expired_at = time();
         // change plan process
         if ((int)$order->type === 3) {
             $this->user->expired_at = time();
