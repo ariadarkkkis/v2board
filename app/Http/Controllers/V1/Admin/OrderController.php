@@ -152,7 +152,7 @@ class OrderController extends Controller
 
         $userService = new UserService();
         if ($userService->isNotCompleteOrderByUserId($user->id)) {
-            abort(500, '该用户还有待支付的订单，无法分配');
+            abort(500, 'There is a pending order, please wait for 1 minute');
         }
 
         DB::beginTransaction();

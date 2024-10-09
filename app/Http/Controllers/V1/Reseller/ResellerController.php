@@ -316,6 +316,11 @@ class ResellerController extends Controller
             abort(500, '该订阅不存在');
         }
 
+        $userService = new UserService();
+        if ($userService->isNotCompleteOrderByUserId($user->id)) {
+            abort(500, 'There is a pending order, please wait for 1 minute');
+        }
+
         DB::beginTransaction();
         $order = new Order();
         $order->user_id = $user->id;

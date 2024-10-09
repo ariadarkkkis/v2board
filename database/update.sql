@@ -211,6 +211,9 @@ ALTER TABLE `v2_plan`
 ADD `sort` int(11) NULL AFTER `show`;
 
 ALTER TABLE `v2_plan`
+ADD `two_month_price` int(11) NULL AFTER `month_price`;
+
+ALTER TABLE `v2_plan`
 CHANGE `month_price` `month_price` int(11) NULL AFTER `content`,
 CHANGE `quarter_price` `quarter_price` int(11) NULL AFTER `month_price`,
 CHANGE `half_year_price` `half_year_price` int(11) NULL AFTER `quarter_price`,
@@ -296,6 +299,9 @@ ADD `three_year_price` int(11) NULL AFTER `two_year_price`;
 
 ALTER TABLE `v2_user`
 ADD `is_staff` tinyint(1) NOT NULL DEFAULT '0' AFTER `is_admin`;
+
+ALTER TABLE `v2_user`
+ADD `is_reseller` tinyint(1) NOT NULL DEFAULT '0' AFTER `is_staff`;
 
 CREATE TABLE `v2_server_shadowsocks` (
   `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,

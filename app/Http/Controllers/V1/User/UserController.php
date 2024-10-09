@@ -54,6 +54,9 @@ class UserController extends Controller
         if ($request->user['is_admin']) {
             $data['is_admin'] = true;
         }
+        if ($request->user['is_reseller']) {
+            $data['is_reseller'] = true;
+        }
         return response([
             'data' => $data
         ]);
