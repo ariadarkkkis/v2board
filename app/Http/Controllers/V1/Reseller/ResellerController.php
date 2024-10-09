@@ -51,7 +51,7 @@ class ResellerController extends Controller
             }
         }
     }
-    
+
     public function userFetch(UserFetch $request)
     {
         $user = User::find($request->user['id']);
@@ -102,7 +102,7 @@ class ResellerController extends Controller
             'total' => $total
         ]);
     }
-    
+
     public function userGenerate(UserGenerate $request)
     {
         $resellerUser = User::find($request->user['id']);
@@ -132,7 +132,7 @@ class ResellerController extends Controller
             if (!User::create($user)) {
                 abort(500, '生成失败');
             }
-            
+
             if ($request->input('plan_id')){
                 $this->setManualOrder($user['email'], $plan->id);
             }
@@ -141,7 +141,7 @@ class ResellerController extends Controller
                 'data' => true
             ]);
         }
-        
+
         if ($request->input('generate_count')) {
             $this->userMultiGenerate($request, $resellerUser);
         }
@@ -184,16 +184,16 @@ class ResellerController extends Controller
             $createDate = date('Y-m-d H:i:s', $user['created_at']);
             $password = $user['password'];
             $subscribeUrl = Helper::getSubscribeUrl($user['token']);
-            
+
             if ($request->input('plan_id')){
                 $this->setManualOrder($user['email'], $plan->id);
             }
-            
+
             $data .= "{$user['email']},{$password},{$expireDate},{$user['uuid']},{$createDate},{$subscribeUrl}\r\n";
         }
         echo $data;
     }
-    
+
     public function userBan(Request $request)
     {
         $sortType = in_array($request->input('sort_type'), ['ASC', 'DESC']) ? $request->input('sort_type') : 'DESC';
@@ -212,7 +212,7 @@ class ResellerController extends Controller
             'data' => true
         ]);
     }
-    
+
     public function userResetSecret(Request $request)
     {
         $user = User::find($request->input('id'));
@@ -223,7 +223,7 @@ class ResellerController extends Controller
             'data' => $user->save()
         ]);
     }
-    
+
     public function getUserInfoById(Request $request)
     {
         if (empty($request->input('id'))) {
@@ -237,7 +237,7 @@ class ResellerController extends Controller
             'data' => $user
         ]);
     }
-    
+
     // Order
     private function orderFilter(Request $request, &$builder)
     {
@@ -302,7 +302,7 @@ class ResellerController extends Controller
             'total' => $total
         ]);
     }
-    
+
     public function orderAssign(OrderAssign $request)
     {
         $plan = Plan::find($request->input('plan_id'));
@@ -320,16 +320,27 @@ class ResellerController extends Controller
         $order = new Order();
         $order->user_id = $user->id;
         $order->plan_id = $plan->id;
-        $order->period = 'onetime_price';
+        $order->period = $request->input('period');
         $order->trade_no = Helper::guid();
         $order->total_amount = 0;
 
         // Update user
-        $user->plan_id = $plan->id;
-        $user->group_id = $plan->group_id;
-        $user->transfer_enable = $plan->transfer_enable * 1073741824;
-        $user->device_limit = $plan->device_limit;
-        $user->expired_at = time() + ($plan->days * 24 * 60 * 60);
+        // $user->plan_id = $plan->id;
+        // $user->group_id = $plan->group_id;
+        // $user->transfer_enable = $plan->transfer_enable * 1073741824;
+        // $user->u = 0;
+        // $user->d = 0;
+        // $user->device_limit = $plan->device_limit;
+        // $user->speed_limit = $plan->speed_limit;
+
+        // $timestamp = time();
+        // $user->expired_at = match ($order->period) {
+        //     'month_price' => strtotime('+1 month', $timestamp),
+        //     'two_month_price' => strtotime('+2 month', $timestamp),
+        //     'quarter_price' => strtotime('+3 month', $timestamp),
+        //     default => $timestamp
+        // };
+        // $user->expired_at = time() + ($plan->days * 24 * 60 * 60);
 
         if ($order->period === 'reset_price') {
             $order->type = 4;
@@ -340,18 +351,18 @@ class ResellerController extends Controller
         } else {
             $order->type = 1;
         }
-        
-        $order->status = 3;
+
+        $order->status = 1;
 
         if (!$order->save()) {
             DB::rollback();
             abort(500, '订单创建失败');
         }
 
-        if (!$user->save()) {
-            DB::rollback();
-            abort(500, '订单创建失败');
-        }
+        // if (!$user->save()) {
+        //     DB::rollback();
+        //     abort(500, '订单创建失败');
+        // }
 
         DB::commit();
 
@@ -359,7 +370,7 @@ class ResellerController extends Controller
             'data' => $order->trade_no
         ]);
     }
-    
+
     private function setManualOrder($userEmail, $planId)
     {
         $user = User::where('email', $userEmail)->first();
@@ -380,7 +391,7 @@ class ResellerController extends Controller
         } else {
             $order->type = 1;
         }
-        
+
         $order->status = 3;
 
         if (!$order->save()) {
@@ -390,7 +401,7 @@ class ResellerController extends Controller
 
         DB::commit();
     }
-    
+
     // Plan
     public function planFetch(Request $request)
     {
@@ -407,7 +418,7 @@ class ResellerController extends Controller
             'data' => $plans
         ]);
     }
-    
+
     // Server
     public function serverGroupFetch(Request $request)
     {

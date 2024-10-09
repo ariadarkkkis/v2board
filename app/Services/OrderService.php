@@ -14,6 +14,7 @@ class OrderService
 {
     CONST STR_TO_TIME = [
         'month_price' => 1,
+        'two_month_price' => 2,
         'quarter_price' => 3,
         'half_year_price' => 6,
         'year_price' => 12,
@@ -205,18 +206,18 @@ class OrderService
             $orderAmountSum += $item['total_amount'] + $item['balance_amount'] + $item['surplus_amount'] - $item['refund_amount'];
         }
         if ($lastValidateAt === null) return;
-    
+
         $expiredAtByOrder = strtotime("+{$orderMonthSum} month", $lastValidateAt);
         if ($expiredAtByOrder < time()) return;
         $orderSurplusSecond = $expiredAtByOrder - time();
         $orderRangeSecond = $expiredAtByOrder - $lastValidateAt;
-    
+
         $totalTraffic = $user->transfer_enable / 1073741824;
         $usedTraffic = ($user->u + $user->d) / 1073741824;
         if ($totalTraffic == 0) return;
-    
+
         $remainingTrafficRatio = ($totalTraffic - $usedTraffic) / $totalTraffic;
-    
+
         $avgPricePerSecond = $orderAmountSum / $orderRangeSecond;
         if ($orderRangeSecond <= 31 * 86400) {
             $orderSurplusAmount = $avgPricePerSecond * $orderSurplusSecond * $remainingTrafficRatio;
@@ -226,7 +227,7 @@ class OrderService
             $orderSurplusAmount = $avgPricePerSecond * $firstMonthSeconds * $remainingTrafficRatio +
                                   $avgPricePerSecond * $laterMonthsSeconds;
         }
-    
+
         $order->surplus_amount = max($orderSurplusAmount, 0);
         $order->surplus_order_ids = array_column($orders, 'id');
     }
@@ -328,6 +329,8 @@ class OrderService
         switch ($str) {
             case 'month_price':
                 return strtotime('+1 month', $timestamp);
+            case 'two_month_price':
+                return strtotime('+2 month', $timestamp);
             case 'quarter_price':
                 return strtotime('+3 month', $timestamp);
             case 'half_year_price':

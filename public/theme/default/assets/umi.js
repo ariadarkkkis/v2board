@@ -17802,7 +17802,7 @@
                 }, "Loading...")) : a.a.createElement("div", {
                     className: "row"
                 }, e.filter(e=>{
-                    return !this.state.tabs || (!(1 !== this.state.tabs || !(e.month_price || e.quarter_price || e.half_year_price || e.year_price || e.two_year_price || e.three_year_price)) || (!(2 !== this.state.tabs || !e.onetime_price) || void 0))
+                    return !this.state.tabs || (!(1 !== this.state.tabs || !(e.month_price || e.two_month_price || e.quarter_price || e.half_year_price || e.year_price || e.two_year_price || e.three_year_price)) || (!(2 !== this.state.tabs || !e.onetime_price) || void 0))
                 }
                 ).map(e=>{
                     var n = this.getUnitPriceTag(e)
@@ -52530,6 +52530,9 @@
             periodText: {
                 month_price: ()=>Object(r["formatMessage"])({
                     id: "\u6708\u4ed8"
+                }),
+                two_month_price: ()=>Object(r["formatMessage"])({
+                    id: "\u4e24\u6708\u4ed8"
                 }),
                 quarter_price: ()=>Object(r["formatMessage"])({
                     id: "\u5b63\u4ed8"
