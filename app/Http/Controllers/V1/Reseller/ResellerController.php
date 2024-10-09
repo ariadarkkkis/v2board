@@ -342,16 +342,17 @@ class ResellerController extends Controller
         // };
         // $user->expired_at = time() + ($plan->days * 24 * 60 * 60);
 
-        if ($order->period === 'reset_price') {
-            $order->type = 4;
-        } else if ($user->plan_id !== NULL && $order->plan_id !== $user->plan_id) {
-            $order->type = 3;
-        } else if ($user->expired_at > time() && $order->plan_id == $user->plan_id) {
-            $order->type = 2;
-        } else {
-            $order->type = 1;
-        }
+        // if ($order->period === 'reset_price') {
+        //     $order->type = 4;
+        // } else if ($user->plan_id !== NULL && $order->plan_id !== $user->plan_id) {
+        //     $order->type = 3;
+        // } else if ($user->expired_at > time() && $order->plan_id == $user->plan_id) {
+        //     $order->type = 2;
+        // } else {
+        //     $order->type = 1;
+        // }
 
+        $order->type = 1;
         $order->status = 1;
 
         if (!$order->save()) {
