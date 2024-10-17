@@ -56,7 +56,8 @@ class ClientController extends Controller
             "port" => "80",
             "security" => "none",
             "tls" => 0,
-            "flow" => ""
+            "flow" => "",
+            "type" => "vless"
         ];
         $infoServer = Helper::buildVlessUri($user->uuid, $infoServerDetail);
         array_push($servers, array_merge(['uri' => $infoServer], [
