@@ -55,7 +55,8 @@ class ClientController extends Controller
             "host" => "edge.microsoft.com",
             "port" => "80",
             "security" => "none",
-            "tls" => 0
+            "tls" => 0,
+            "flow" => ""
         ];
         $infoServer = Helper::buildVlessUri($user->uuid, $infoServerDetail);
         array_push($servers, array_merge($infoServer, [
