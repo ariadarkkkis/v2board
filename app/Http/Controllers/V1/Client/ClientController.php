@@ -59,19 +59,19 @@ class ClientController extends Controller
             "flow" => ""
         ];
         $infoServer = Helper::buildVlessUri($user->uuid, $infoServerDetail);
-        array_push($servers, array_merge($infoServer, [
+        array_push($servers, array_merge(['uri' => $infoServer], [
             'name' => "Expire: {$expiredDate}",
         ]));
         if ($resetDay) {
-            array_push($servers, array_merge($infoServer, [
+            array_push($servers, array_merge(['uri' => $infoServer], [
                 'name' => "Reset day: {$resetDay} 天",
             ]));
         }
-        array_push($servers, array_merge($infoServer, [
+        array_push($servers, array_merge(['uri' => $infoServer], [
             'name' => "Remaining：{$remainingTraffic}",
         ]));
 
-        array_push($servers, array_merge($infoServer, [
+        array_push($servers, array_merge(['uri' => $infoServer], [
             'name' => "UserID：{$user->id}",
         ]));
     }
