@@ -49,16 +49,28 @@ class ClientController extends Controller
         $expiredDate = $user['expired_at'] ? date('Y-m-d', $user['expired_at']) : '长期有效';
         $userService = new UserService();
         $resetDay = $userService->getResetDay($user);
-        array_unshift($servers, array_merge($servers[0], [
-            'name' => "套餐到期：{$expiredDate}",
+        $infoServerDetail = [
+            "name" => "",
+            "network" => "tcp",
+            "host" => "edge.microsoft.com",
+            "port" => "80",
+            "security" => "none"
+        ];
+        $infoServer = Helper::buildVlessUri($user->uuid, $infoServerDetail);
+        array_push($servers, array_merge($infoServer, [
+            'name' => "Expire: {$expiredDate}",
         ]));
         if ($resetDay) {
-            array_unshift($servers, array_merge($servers[0], [
-                'name' => "距离下次重置剩余：{$resetDay} 天",
+            array_push($servers, array_merge($infoServer, [
+                'name' => "Reset day: {$resetDay} 天",
             ]));
         }
-        array_unshift($servers, array_merge($servers[0], [
-            'name' => "剩余流量：{$remainingTraffic}",
+        array_push($servers, array_merge($infoServer, [
+            'name' => "Remaining：{$remainingTraffic}",
+        ]));
+
+        array_push($servers, array_merge($infoServer, [
+            'name' => "UserID：{$user->id}",
         ]));
     }
 }
