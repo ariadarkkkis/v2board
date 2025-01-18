@@ -30,7 +30,7 @@
         ],
         "servers": [
             {
-                "address": "https://1.1.1.1/dns-query",
+                "address": "1.1.1.1",
                 "detour": "节点选择",
                 "tag": "remote"
             },
@@ -40,11 +40,13 @@
                 "tag": "local"
             },
             {
-                "address": "rcode://success",
+                "address": "rcode://refused",
                 "tag": "block"
             }
         ],
-        "strategy": "ipv4_only"
+        "final": "remote",
+        "strategy": "ipv4_only",
+        "disable_cache": false
     },
     "experimental": {
         "cache_file": {
@@ -61,8 +63,10 @@
             "auto_route": true,
             "domain_strategy": "prefer_ipv4",
             "endpoint_independent_nat": true,
-            "inet4_address": "172.19.0.1/30",
-            "inet6_address": "2001:0470:f9da:fdfa::1/64",
+            "address": [
+                "172.19.0.1/30",
+                "2001:0470:f9da:fdfa::1/64"
+            ],
             "mtu": 9000,
             "sniff": true,
             "sniff_override_destination": true,
@@ -168,7 +172,7 @@
                 "tag": "geoip-cn",
                 "type": "remote",
                 "format": "binary",
-                "url": "https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs",
+                "url": "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/srs/cn.srs",
                 "download_detour": "节点选择"
             }
         ]

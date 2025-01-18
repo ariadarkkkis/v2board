@@ -13,6 +13,7 @@ use App\Models\Plan;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Services\AuthService;
+use App\Services\OrderService;
 use App\Services\UserService;
 use App\Utils\CacheKey;
 use App\Utils\Helper;
@@ -155,7 +156,7 @@ class UserController extends Controller
                     $user->d = 0;
                     break;
                 case 5:
-                    if ($user->plan_id == null || $user->expired_at < $currentTime) {
+                    if ($user->plan_id == null || ($user->expired_at !== null && $user->expired_at < $currentTime)) {
                         $plan = Plan::where('id', $giftcard->plan_id)->first();
                         $user->plan_id = $plan->id;
                         $user->group_id = $plan->group_id;
@@ -163,7 +164,11 @@ class UserController extends Controller
                         $user->device_limit = $plan->device_limit;
                         $user->u = 0;
                         $user->d = 0;
-                        $user->expired_at = $currentTime + $giftcard->value * 86400;
+                        if($giftcard->value == 0) {
+                            $user->expired_at = null;
+                        } else {
+                            $user->expired_at = $currentTime + $giftcard->value * 86400;
+                        }
                     } else {
                         abort(500, __('Not suitable gift card type'));
                     }
@@ -203,6 +208,7 @@ class UserController extends Controller
                 'last_login_at',
                 'created_at',
                 'banned',
+                'auto_renewal',
                 'remind_expire',
                 'remind_traffic',
                 'expired_at',
@@ -302,6 +308,7 @@ class UserController extends Controller
     public function update(UserUpdate $request)
     {
         $updateData = $request->only([
+            'auto_renewal',
             'remind_expire',
             'remind_traffic'
         ]);
@@ -330,11 +337,28 @@ class UserController extends Controller
         if ($request->input('transfer_amount') > $user->commission_balance) {
             abort(500, __('Insufficient commission balance'));
         }
+        DB::beginTransaction();
+        $order = new Order();
+        $orderService = new OrderService($order);
+        $order->user_id = $request->user['id'];
+        $order->plan_id = 0;
+        $order->period = 'deposit';
+        $order->trade_no = Helper::generateOrderNo();
+        $order->total_amount = $request->input('transfer_amount');
+
+        $orderService->setOrderType($user);
+        $orderService->setInvite($user);
+
         $user->commission_balance = $user->commission_balance - $request->input('transfer_amount');
         $user->balance = $user->balance + $request->input('transfer_amount');
-        if (!$user->save()) {
+        $order->status = 3;
+        if (!$order->save()||!$user->save()) {
+            DB::rollback();
             abort(500, __('Transfer failed'));
         }
+
+        DB::commit();
+
         return response([
             'data' => true
         ]);

@@ -6,7 +6,9 @@ use Adapterman\Adapterman;
 use Workerman\Worker;
 use Illuminate\Support\Facades\Cache;
 
+putenv('APP_RUNNING_IN_CONSOLE=false');
 define('MAX_REQUEST', 6600);
+define('isWEBMAN', true);
 
 Adapterman::init();
 

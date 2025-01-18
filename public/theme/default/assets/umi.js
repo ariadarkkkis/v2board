@@ -1038,6 +1038,9 @@
                 var e = this.props.subscribeUrl
                   , t = [];
                 return t.push({
+                    title: "Hiddify",
+                    href: "hiddify://import/" + e + "&flag=sing" + "#" + window.settings.title
+                }), t.push({
                     title: "Sing-box",
                     href: "sing-box://import-remote-profile?url=" + encodeURIComponent(e + "&flag=sing-box") + "#" + window.settings.title
                 }), (Object(u["i"])() || Object(u["j"])()) && (t.push({
@@ -15939,6 +15942,39 @@
                     })
                 })
             }
+            deposit() {
+                var e = this;
+                s["a"].confirm({
+                    title: l.a.createElement("input", {
+                        className: "form-control",
+                        placeholder: Object(m["formatMessage"])({
+                            id: "\u8bf7\u8f93\u5165\u5145\u503c\u91d1\u989d" + e.props.comm.config.currency
+                        }),
+                        onChange: function(event) {
+                            e.deposit_amount = event.target.value * 100;
+                        },
+                        autocomplete: "one-time-code"
+                    }),
+                    onOk() {
+                        var o = {
+                            period: "deposit",
+                            deposit_amount: e.deposit_amount,
+                            plan_id: 0
+                        };
+                        e.props.dispatch({
+                            type: "order/save",
+                            params: o
+                        })
+                    },
+                    onCancel() {},
+                    okText: Object(m["formatMessage"])({
+                        id: "\u786e\u8ba4"
+                    }),
+                    cancelText: Object(m["formatMessage"])({
+                        id: "\u53d6\u6d88"
+                    })
+                })
+            }
             render() {
                 var e = this.props.user
                   , t = e.userInfo
@@ -15967,7 +16003,7 @@
                 }, l.a.createElement("p", {
                     className: "text-muted w-75"
                 }, Object(m["formatMessage"])({
-                    id: "\u6211\u7684\u94b1\u5305"
+                    id: "\u6211\u7684\u94b1\u5305(\u4ec5\u6d88\u8d39)"
                 })), l.a.createElement("p", {
                     className: "display-4 text-black font-w300 mb-2"
                 }, void 0 !== t.balance ? (parseInt(t.balance) / 100).toFixed(2) : "--.--", l.a.createElement("span", {
@@ -15978,8 +16014,19 @@
                         cursor: "pointer"
                     }
                 }, Object(m["formatMessage"])({
-                    id: "\u8d26\u6237\u4f59\u989d(\u4ec5\u6d88\u8d39)"
-                }))))))), l.a.createElement("div", {
+                    id: "\u81ea\u52a8\u7eed\u8d39"
+                }), l.a.createElement(i["a"], {
+                    loading: this.props.user.auto_renewal_loading,
+                    checked: t.auto_renewal,
+                    onChange: e=>this.update("auto_renewal", e ? 1 : 0)
+                })), l.a.createElement("div", {
+                    className: "pt-3"
+                }, l.a.createElement(a["a"], {
+                    type: "primary",
+                    onClick: ()=>this.deposit()
+                }, Object(m["formatMessage"])({
+                    id: "\u5145\u503c"
+                })))))))), l.a.createElement("div", {
                     className: "row mb-3 mb-md-0"
                 }, l.a.createElement("div", {
                     className: "col-md-12"
@@ -17145,7 +17192,7 @@
           , u = s.host
           , l = document.createElement("link");
         if (l.rel = "stylesheet",
-        l.href = u ? "./theme/".concat(c.color, ".css") : "./theme/default/assets/theme/".concat(c.color, ".css"),
+        l.href = u ? "./theme/".concat(c.color, ".css") : "/theme/default/assets/theme/".concat(c.color, ".css"),
         document.getElementsByTagName("head")[0].appendChild(l),
         Object(i["e"])("i18n"))
             Object(o["setLocale"])(Object(i["e"])("i18n"));
@@ -18821,13 +18868,15 @@
                     className: "block-content pb-4"
                 }, f.a.createElement("div", {
                     className: "v2board-order-info"
-                }, f.a.createElement("div", null, f.a.createElement("span", null, Object(b["formatMessage"])({
+                }, t.plan.id == 0 ? (f.a.createElement("div", null, f.a.createElement("span", null, Object(b["formatMessage"])({
+                    id: "\u4ea7\u54c1\u540d\u79f0"
+                }), "\uff1a"), f.a.createElement("span", null, "\u5145\u503c"))) : (f.a.createElement("div", null, f.a.createElement("span", null, Object(b["formatMessage"])({
                     id: "\u4ea7\u54c1\u540d\u79f0"
                 }), "\uff1a"), f.a.createElement("span", null, t.plan.name)), f.a.createElement("div", null, f.a.createElement("span", null, Object(b["formatMessage"])({
                     id: "\u7c7b\u578b/\u5468\u671f"
                 }), "\uff1a"), f.a.createElement("span", null, h["a"].periodText[t.period] && h["a"].periodText[t.period]())), f.a.createElement("div", null, f.a.createElement("span", null, Object(b["formatMessage"])({
                     id: "\u4ea7\u54c1\u6d41\u91cf"
-                }), "\uff1a"), f.a.createElement("span", null, t.plan.transfer_enable, " GB"))))), f.a.createElement("div", {
+                }), "\uff1a"), f.a.createElement("span", null, t.plan.transfer_enable, " GB")))))), f.a.createElement("div", {
                     className: "block block-rounded"
                 }, f.a.createElement("div", {
                     className: "block-header block-header-default"
@@ -18953,7 +19002,24 @@
                     className: "text-light mb-3"
                 }, Object(b["formatMessage"])({
                     id: "\u8ba2\u5355\u603b\u989d"
-                })), f.a.createElement("div", {
+                })), t.plan.id == 0 && f.a.createElement("div", null, f.a.createElement("div", {
+                    className: "pt-3"
+                }, Object(b["formatMessage"])({
+                    id: "\u5145\u503c\u5956\u52b1"
+                }), f.a.createElement("div", {
+                    className: "text-right"
+                }, g.currency_symbol, (t.bounus / 100).toFixed(2)))), t.plan.id == 0 && f.a.createElement("div", null, f.a.createElement("div", {
+                    className: "pt-3"
+                }, Object(b["formatMessage"])({
+                    id: "\u5b9e\u9645\u5230\u8d26"
+                }),f.a.createElement("div", {
+                    className: "text-right"
+                }, g.currency_symbol, (t.get_amount / 100).toFixed(2))), f.a.createElement("div", {
+                    className: "row no-gutters py-3",
+                    style: {
+                        borderBottom: "1px solid #646669"
+                    }
+                })), t.plan.id != 0 && f.a.createElement("div", {
                     className: "row no-gutters pb-3",
                     style: {
                         borderBottom: "1px solid #646669"
@@ -31032,12 +31098,10 @@
                     maskClosable: !0,
                     footer: !1,
                     onCancel: ()=>this.modalVisible()
-                }, this.state.notice.content && this.state.notice.content.split("\n").map(e=>{
-                    return l.a.createElement("p", {
-                        key: Math.random()
-                    }, e)
-                }
-                )))
+                }, this.state.notice.content && l.a.createElement("div", {
+                    className: "notice-content",
+                    dangerouslySetInnerHTML: { __html: this.state.notice.content }
+                })))
             }
         }
         t["default"] = Object(y["c"])(e=>{
@@ -52764,11 +52828,11 @@
                         }), Object(w["formatMessage"])({
                             id: "\u5df2\u5173\u95ed"
                         })) : m.a.createElement("span", null, m.a.createElement(f["a"], {
-                            status: parseInt(e) ? "error" : "processing"
+                            status: parseInt(e) ? "processing" : "error"
                         }), parseInt(e) ? Object(w["formatMessage"])({
-                            id: "\u5f85\u56de\u590d"
+                            id: "\u5df2\u7b54\u590d"
                         }) : Object(w["formatMessage"])({
-                            id: "\u5df2\u56de\u590d"
+                            id: "\u5f85\u5904\u7406"
                         }))
                     }
                 }, {

@@ -31,6 +31,7 @@ class Singbox
             ->header('Content-Type', 'application/json')
             ->header('subscription-userinfo', "upload={$user['u']}; download={$user['d']}; total={$user['transfer_enable']}; expire={$user['expired_at']}")
             ->header('profile-update-interval', '24')
+            ->header('Profile-Title', 'base64:' . base64_encode($appName))
             ->header('Content-Disposition', 'attachment; filename="' . $appName . '"');
     }
 
@@ -76,7 +77,7 @@ class Singbox
     protected function addProxies($proxies)
     {
         foreach ($this->config['outbounds'] as &$outbound) {
-            if (($outbound['type'] === 'selector' && $outbound['tag'] === '节点选择') || ($outbound['type'] === 'urltest' && $outbound['tag'] === '自动选择')) {
+            if (($outbound['type'] === 'selector' && $outbound['tag'] === '节点选择') || ($outbound['type'] === 'urltest' && $outbound['tag'] === '自动选择') || ($outbound['type'] === 'selector' && strpos($outbound['tag'], '#') === 0 )) {
                 array_push($outbound['outbounds'], ...array_column($proxies, 'tag'));
             }
         }
@@ -212,14 +213,6 @@ class Singbox
             if ($server['network_settings']) {
                 $grpcSettings = $server['network_settings'];
                 if (isset($grpcSettings['serviceName'])) $array['transport']['service_name'] = $grpcSettings['serviceName'];
-            }
-        }
-        if ($server['network'] === 'h2') {
-            $array['transport']['type'] = 'http';
-            if ($server['network_settings']) {
-                $h2Settings = $server['network_settings'];
-                if (isset($h2Settings['host'])) $array['transport']['host'] = array($h2Settings['host']);
-                if (isset($h2Settings['path'])) $array['transport']['path'] = $h2Settings['path'];
             }
         }
 

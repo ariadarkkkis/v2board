@@ -435,7 +435,7 @@ CREATE TABLE `v2_ticket` (
                              `subject` varchar(255) NOT NULL,
                              `level` tinyint(1) NOT NULL,
                              `status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '0:已开启 1:已关闭',
-                             `reply_status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '0:待回复 1:已回复',
+                             `reply_status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '0:待回复 1:已回复',
                              `created_at` int(11) NOT NULL,
                              `updated_at` int(11) NOT NULL,
                              PRIMARY KEY (`id`)
@@ -482,6 +482,7 @@ CREATE TABLE `v2_user` (
                            `group_id` int(11) DEFAULT NULL,
                            `plan_id` int(11) DEFAULT NULL,
                            `speed_limit` int(11) DEFAULT NULL,
+                           `auto_renewal` tinyint(4) DEFAULT '0',
                            `remind_expire` tinyint(4) DEFAULT '1',
                            `remind_traffic` tinyint(4) DEFAULT '1',
                            `token` char(32) NOT NULL,

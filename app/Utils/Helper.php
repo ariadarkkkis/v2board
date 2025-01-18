@@ -210,16 +210,6 @@ class Helper
             case 'grpc':
                 $config['path'] = $networkSettings['serviceName'] ?? null;
                 break;
-            
-            case 'quic':
-                $config['host'] = $networkSettings['security'] ?? null;
-                if (!empty($config['host'])) {
-                    if (isset($networkSettings['key'])) {
-                        $config['path'] = $networkSettings['key'];
-                    }
-                }
-                $config['type'] = $networkSettings['header']['type'] ?? 'none';
-                break;
 
             case 'kcp':
                 if (isset($networkSettings['seed'])) {
@@ -233,9 +223,11 @@ class Helper
                 $config['host'] = $networkSettings['host'] ?? null;
                 break;
             
-            case 'splithttp':
+            case 'xhttp':
                 $config['path'] = $networkSettings['path'] ?? null;
                 $config['host'] = $networkSettings['host'] ?? null;
+                $config['mode'] = $networkSettings['mode'] ?? 'auto';
+                $config['extra'] = isset($networkSettings['extra']) ? json_encode($networkSettings['extra'], JSON_UNESCAPED_SLASHES) : null;
                 break;
         }
 
@@ -254,13 +246,9 @@ class Helper
             "headerType" => "none",
             "quicSecurity" => "none",
             "serviceName" => "",
-            "mode" => "gun",
             "security" => $server['tls'] != 0 ? ($server['tls'] == 2 ? "reality" : "tls") : "",
             "flow" => $server['flow'],
             "fp" => $server['tls_settings']['fingerprint'] ?? 'chrome',
-            "sni" => "",
-            "pbk" => "",
-            "sid" => "",
         ];
 
         if ($server['tls']) {
@@ -316,9 +304,10 @@ class Helper
             "hysteria://{$remote}:{$firstPort}/?protocol=udp&auth={$password}&insecure={$server['insecure']}&peer={$server['server_name']}&upmbps={$server['down_mbps']}&downmbps={$server['up_mbps']}";
 
         if (isset($server['obfs']) && isset($server['obfs_password'])) {
+            $obfs_password = rawurlencode($server['obfs_password']);
             $uri .= $server['version'] == 2 ? 
-                "&obfs={$server['obfs']}&obfs-password={$server['obfs_password']}" :
-                "&obfs={$server['obfs']}&obfsParam{$server['obfs_password']}";
+                "&obfs={$server['obfs']}&obfs-password={$obfs_password}" :
+                "&obfs={$server['obfs']}&obfsParam{$obfs_password}";
         }
         if (count($parts) !== 1 || strpos($parts[0], '-') !== false) {
             $uri .= "&mport={$server['mport']}";
@@ -341,20 +330,14 @@ class Helper
             case 'grpc':
                 self::configureGrpcSettings($settings, $config);
                 break;
-            case 'quic':
-                self::configureQuicSettings($settings, $config);
-                break;
             case 'kcp':
                 self::configureKcpSettings($settings, $config);
-                break;
-            case 'h2':
-                self::configureH2Settings($settings, $config);
                 break;
             case 'httpupgrade':
                 self::configureHttpupgradeSettings($settings, $config);
                 break;
-            case 'splithttp':
-                self::configureSplithttpSettings($settings, $config);
+            case 'xhttp':
+                self::configureXhttpSettings($settings, $config);
                 break;
         }
     }
@@ -380,29 +363,12 @@ class Helper
         $config['serviceName'] = $settings['serviceName'] ?? '';
     }
 
-    public static function configureQuicSettings($settings, &$config)
-    {
-        $config['quicSecurity'] = $settings['security'] ?? 'none';
-        if ($config['quicSecurity'] !='none') {
-            if (isset($settings['key'])){
-                $config['key'] = $settings['key'];
-            }
-        }
-        $config['headerType'] = $settings['header']['type'] ?? 'none';
-    }
-
     public static function configureKcpSettings($settings, &$config)
     {
         $config['headerType'] = $settings['header']['type'] ?? 'none';
         if (isset($settings['seed'])) {
             $config['seed'] = $settings['seed'];
         }
-    }
-	
-    public static function configureH2Settings($settings, &$config)
-    {
-        $config['path'] = $settings['path'] ?? '';
-        $config['host'] = $settings['host'] ?? '';
     }
 
     public static function configureHttpupgradeSettings($settings, &$config)
@@ -411,9 +377,11 @@ class Helper
         $config['host'] = $settings['host'] ?? '';
     }
 
-    public static function configureSplithttpSettings($settings, &$config)
+    public static function configureXhttpSettings($settings, &$config)
     {
         $config['path'] = $settings['path'] ?? '';
         $config['host'] = $settings['host'] ?? '';
+        $config['mode'] = $settings['mode'] ?? 'auto';
+        $config['extra'] = isset($settings['extra']) ? json_encode($settings['extra'], JSON_UNESCAPED_SLASHES) : null;
     }
 }

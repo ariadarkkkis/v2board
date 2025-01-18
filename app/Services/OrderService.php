@@ -6,8 +6,6 @@ use App\Jobs\OrderHandleJob;
 use App\Models\Order;
 use App\Models\Plan;
 use App\Models\User;
-use App\Utils\CacheKey;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class OrderService
@@ -33,6 +31,23 @@ class OrderService
     {
         $order = $this->order;
         $this->user = User::find($order->user_id);
+        if ($order->type == 9) {
+            DB::beginTransaction();
+            $this->user->balance += $order->total_amount + $this->getbounus($order->total_amount);
+
+            if (!$this->user->save()) {
+                DB::rollBack();
+                abort(500, '充值失败');
+            }
+            $order->status = 3;
+            if (!$order->save()) {
+                DB::rollBack();
+                abort(500, '充值失败');
+            }
+            DB::commit();
+            return;
+        }
+
         $plan = Plan::find($order->plan_id);
 
         if ($order->refund_amount) {
@@ -51,7 +66,7 @@ class OrderService
         }
         switch ((string)$order->period) {
             case 'onetime_price':
-                $this->buyByOneTime($plan);
+                $this->buyByOneTime($order, $plan);
                 break;
             case 'reset_price':
                 $this->buyByResetTraffic();
@@ -91,7 +106,9 @@ class OrderService
     public function setOrderType(User $user)
     {
         $order = $this->order;
-        if ($order->period === 'reset_price') {
+        if ($order->period === 'deposit'){
+            $order->type = 9;
+        } else if ($order->period === 'reset_price') {
             $order->type = 4;
         } else if ($user->plan_id !== NULL && $order->plan_id !== $user->plan_id && ($user->expired_at > time() || $user->expired_at === NULL)) {
             if (!(int)config('v2board.plan_change_enable', 1)) abort(500, '目前不允许更改订阅，请联系客服或提交工单操作');
@@ -190,6 +207,7 @@ class OrderService
         $orders = Order::where('user_id', $user->id)
             ->where('period', '!=', 'reset_price')
             ->where('period', '!=', 'onetime_price')
+            ->where('period', '!=', 'deposit')
             ->where('status', 3)
             ->get()
             ->toArray();
@@ -308,12 +326,14 @@ class OrderService
         $this->user->expired_at = $this->getTime($order->period, $this->user->expired_at);
     }
 
-    private function buyByOneTime(Plan $plan)
+    private function buyByOneTime(Order $order, Plan $plan)
     {
         $transfer_enable = $plan->transfer_enable;
-        $notUsedTraffic = ($this->user->transfer_enable - ($this->user->u + $this->user->d)) / 1073741824;
-        if ($notUsedTraffic > 0 && $this->user->expired_at == NULL) {
-            $transfer_enable += $notUsedTraffic;
+        if (!$order->surplus_order_ids) {
+            $notUsedTraffic = ($this->user->transfer_enable - ($this->user->u + $this->user->d)) / 1073741824;
+            if ($notUsedTraffic > 0 && $this->user->expired_at == NULL) {
+                $transfer_enable += $notUsedTraffic;
+            }
         }
         $this->buyByResetTraffic();
         $this->user->transfer_enable = $transfer_enable * 1073741824;
@@ -355,5 +375,24 @@ class OrderService
                 $this->buyByResetTraffic();
                 break;
         }
+    }
+
+    private function getbounus($total_amount) {
+        $deposit_bounus = config('v2board.deposit_bounus', []);
+        if (empty($deposit_bounus)) {
+            return 0;
+        }
+        $add = 0;
+        foreach ($deposit_bounus as $tier) {
+            list($amount, $bounus) = explode(':', $tier);
+            $amount = (float)$amount * 100;
+            $bounus = (float)$bounus * 100;
+            $amount = (int)$amount;
+            $bounus = (int)$bounus;
+            if ($total_amount >= $amount) {
+                $add = max($add, $bounus);
+            }
+        }
+        return $add;
     }
 }
